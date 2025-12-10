@@ -1,3 +1,7 @@
+# Project-relevant files
+memories_history.html
+memories/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
