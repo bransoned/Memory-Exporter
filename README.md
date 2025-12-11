@@ -29,7 +29,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/bransoned/Memory-Exporter">
+  <a href="https://github.com/bransoned/MemorEasy">
     <img src="images/memoreasy_logo.jpg" alt="Logo" width="128" height="128">
   </a>
 
@@ -38,14 +38,14 @@
   <p align="center">
     Python tool used to download Snapchat memory exports. This script allows you to extract and apply date, time, and location data to Snapchat memory exports EXIF data.
     <br />
-    <a href="https://github.com/bransoned/Memory-Exporter"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/bransoned/MemorEasy"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-<!--    <a href="https://github.com/bransoned/Memory-Exporter">View Demo</a>
+<!--    <a href="https://github.com/bransoned/MemorEasy">View Demo</a>
     &middot; -->
-    <a href="https://github.com/bransoned/Memory-Exporter/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/bransoned/MemorEasy/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
-    <a href="https://github.com/bransoned/Memory-Exporter/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/bransoned/MemorEasy/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -133,8 +133,8 @@ Below are steps needed to retrieve your Memories_history.html file from Snapchat
 
 1. Clone and enter the repo
    ```sh
-   git clone https://github.com/bransoned/Memory-Exporter.git
-   cd Memory-Exporter
+   git clone https://github.com/bransoned/MemorEasy.git
+   cd MemorEasy
    ```
 2. Create and source a virtual environment (skip this step if you already have a virtual environment you would like to use)
     ```sh
@@ -175,7 +175,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 - [ ] Provide a GUI interface for ease of use by non-power users.
 - [ ] Develop a package/executable for ease of portability to non-power users.
 
-See the [open issues](https://github.com/bransoned/Memory-Exporter/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/bransoned/MemorEasy/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -201,8 +201,8 @@ If you do not feel comfortable contributing code to the project, you can also le
 
 ### Top contributors:
 
-<a href="https://github.com/bransoned/Memory-Exporter/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=bransoned/Memory-Exporter" alt="contrib.rocks image" />
+<a href="https://github.com/bransoned/MemorEasy/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=bransoned/MemorEasy" alt="contrib.rocks image" />
 </a>
 
 
@@ -221,7 +221,7 @@ Distributed under the AGPL-3.0 license. See `LICENSE.txt` for more information.
 
 Bransoned - [Discord](https://discord.com/users/b.ranson)
 
-Project Link: [https://github.com/bransoned/Memory-Exporter](https://github.com/bransoned/Memory-Exporter)
+Project Link: [https://github.com/bransoned/MemorEasy](https://github.com/bransoned/MemorEasy)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -238,16 +238,16 @@ Project Link: [https://github.com/bransoned/Memory-Exporter](https://github.com/
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/bransoned/Memory-Exporter.svg?style=for-the-badge
-[contributors-url]: https://github.com/bransoned/Memory-Exporter/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/bransoned/Memory-Exporter.svg?style=for-the-badge
-[forks-url]: https://github.com/bransoned/Memory-Exporter/network/members
-[stars-shield]: https://img.shields.io/github/stars/bransoned/Memory-Exporter.svg?style=for-the-badge
-[stars-url]: https://github.com/bransoned/Memory-Exporter/stargazers
-[issues-shield]: https://img.shields.io/github/issues/bransoned/Memory-Exporter.svg?style=for-the-badge
-[issues-url]: https://github.com/bransoned/Memory-Exporter/issues
-[license-shield]: https://img.shields.io/github/license/bransoned/Memory-Exporter.svg?style=for-the-badge
-[license-url]: https://github.com/bransoned/Memory-Exporter/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/bransoned/MemorEasy.svg?style=for-the-badge
+[contributors-url]: https://github.com/bransoned/MemorEasy/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/bransoned/MemorEasy.svg?style=for-the-badge
+[forks-url]: https://github.com/bransoned/MemorEasy/network/members
+[stars-shield]: https://img.shields.io/github/stars/bransoned/MemorEasy.svg?style=for-the-badge
+[stars-url]: https://github.com/bransoned/MemorEasy/stargazers
+[issues-shield]: https://img.shields.io/github/issues/bransoned/MemorEasy.svg?style=for-the-badge
+[issues-url]: https://github.com/bransoned/MemorEasy/issues
+[license-shield]: https://img.shields.io/github/license/bransoned/MemorEasy.svg?style=for-the-badge
+[license-url]: https://github.com/bransoned/MemorEasy/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [product-screenshot]: images/screenshot.png
 
