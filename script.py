@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 import time
 import sys
+import shutil
 
 import exiftool
 
@@ -27,7 +28,7 @@ Also, need to clean up, compartmentalize, and space out this code into functions
 # =========================================================================== #
 
 # If running as PyInstaller bundle
-def find_exiftool()
+def find_exiftool():
 
     if getattr(sys, 'frozen', False):
         base = Path(sys.MEIPASS)
@@ -36,14 +37,22 @@ def find_exiftool()
 
     # Look for exiftool.exe locally
     exe = "exiftool.exe" if sys.platform.startswith("win") else "exiftool"
-    exiftool_path = base / exe
 
-    if exiftool_path.exists():
-        return str(exiftool_path)
-    else:
-        raise FileNotFoundError(
-            f"Could not find {exe}. Expected at: {exiftool_path}"
-        )
+    # Check bundled exe in ./bin directory
+    bundled = base / "bin" / exe
+    if bundled.exists():
+        return str(bundled)
+
+    system_path = shutil.which(exe)
+    if system_path:
+        return system_path
+
+    # 3. Nothing found
+    raise FileNotFoundError(
+        f"ExifTool not found.\n"
+        f"Tried bundled: {bundled}\n"
+        f"Tried system PATH: '{exe}'"
+    )
 
 # =========================================================================== #
 
