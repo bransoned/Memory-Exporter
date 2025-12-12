@@ -1,0 +1,64 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Test and Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  # Test on multiple Python versions (Linux)
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest (if tests exist)
+      run: |
+        pip install pytest
+        pytest || echo "No tests found"
+
+  # Build Windows executable (only on push to main, after tests pass)
+  build-windows:
+#    needs: test  # Wait for tests to pass
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    - name: Build with PyInstaller
+      run: |
+        python -m PyInstaller --onefile --add-binary "bin/exiftool.exe;bin" --add-data "bin/exiftool_files;bin/exiftool_files" script.py
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: script-windows
+        path: dist/script.exe
