@@ -8,6 +8,7 @@ from PIL import Image
 import os
 from datetime import datetime
 import time
+import sys
 
 import exiftool
 
@@ -22,6 +23,27 @@ At a good start right now, though, with it downloading wayyy faster than the HTM
 Also, need to clean up, compartmentalize, and space out this code into functions/cleaner code
 
 """
+
+# =========================================================================== #
+
+# If running as PyInstaller bundle
+def find_exiftool()
+
+    if getattr(sys, 'frozen', False):
+        base = Path(sys.MEIPASS)
+    else:
+        base = Path(__file__).parent
+
+    # Look for exiftool.exe locally
+    exe = "exiftool.exe" if sys.platform.startswith("win") else "exiftool"
+    exiftool_path = base / exe
+
+    if exiftool_path.exists():
+        return str(exiftool_path)
+    else:
+        raise FileNotFoundError(
+            f"Could not find {exe}. Expected at: {exiftool_path}"
+        )
 
 # =========================================================================== #
 
@@ -175,7 +197,9 @@ def mp4_exif_write(mp4_path, date_time_str, lat, lon):
         "GPSLongitudeRef": lon_ref,
     }
 
-    with exiftool.ExifTool() as et:
+    exiftool_binary = find_exiftool()
+
+    with exiftool.ExifTool(executable=exiftool_binary) as et:
         args = []
         for key, value in tags.items():
             args.append(f"-{key}={value}")
