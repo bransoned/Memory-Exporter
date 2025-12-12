@@ -1,18 +1,13 @@
 from bs4 import BeautifulSoup
-import re
-import requests
-from pathlib import Path
-import piexif
-from PIL import Image
-
-import os
 from datetime import datetime
+from pathlib import Path
+import subprocess
+import requests
+import shutil
 import time
 import sys
-import shutil
-
-import subprocess
-import exiftool
+import re
+import os
 
 """
 TODO Need to take data from downloads and begin writing the relevant exif data next...
@@ -106,20 +101,6 @@ def parse_snapchat_memories(html_text):
 
 # =========================================================================== #
 
-def deg_to_dms(deg):
-    d = int(abs(deg))
-    md = (abs(deg) - d) * 60
-    m = int(md)
-    sd = (md - m) * 60
-
-    return (
-        (d, 1),
-        (m, 1),
-        (int(sd * 10000), 10000)
-    )
-
-# =========================================================================== #
-
 def set_file_timestamp(path, date_time_str):
     # Change modified times to original capture date
 
@@ -130,49 +111,9 @@ def set_file_timestamp(path, date_time_str):
     # Set access and modified times
     os.utime(path, (ts, ts))
 
-
 # =========================================================================== #
 
-def jpg_exif_write(jpg_path, date_time_str, lat, lon):
-
-    """
-    date_time_str = "2025:12:02 18:12:04"
-    lat = 40.444803
-    lon = -77.34570
-    """
-
-
-    try:
-        exif_dict = piexif.load(jpg_path)
-    except Exception:
-        exif_dict = {"0th":{}, "Exif":{}, "GPS":{}, "1st":{}}
-
-    # Date/Time
-    exif_dict["0th"][piexif.ImageIFD.DateTime] = date_time_str
-    exif_dict["Exif"][piexif.ExifIFD.DateTimeOriginal] = date_time_str
-    exif_dict["Exif"][piexif.ExifIFD.DateTimeDigitized] = date_time_str
-
-    # GPS
-    lat_ref = "N" if float(lat) >= 0 else "S"
-    lon_ref = "E" if float(lon) >= 0 else "W"
-
-    exif_dict["GPS"][piexif.GPSIFD.GPSLatitudeRef] = lat_ref
-    exif_dict["GPS"][piexif.GPSIFD.GPSLatitude] = deg_to_dms(float(lat))
-
-    exif_dict["GPS"][piexif.GPSIFD.GPSLongitudeRef] = lon_ref
-    exif_dict["GPS"][piexif.GPSIFD.GPSLongitude] = deg_to_dms(float(lon))
-
-    # Write new EXIF data to image file
-    exif_bytes = piexif.dump(exif_dict)
-    img = Image.open(jpg_path)
-    img.save(jpg_path, exif=exif_bytes)
-
-    set_file_timestamp(jpg_path, date_time_str[:-4])
-
-# =========================================================================== #
-
-def mp4_exif_write(mp4_path, date_time_str, lat, lon):
-
+def write_exif(file_path, date_time_str, lat, lon, ext):
     """
     date_time_str = "2025:12:02 18:12:04"
     lat = 40.444803
@@ -181,32 +122,44 @@ def mp4_exif_write(mp4_path, date_time_str, lat, lon):
 
     exiftool_path = find_exiftool()
 
-    # Build exiftool args
+    # Base command with common tags
     cmd = [
         exiftool_path,
         f"-CreateDate={date_time_str}",
         f"-ModifyDate={date_time_str}",
-        f"-TrackCreateDate={date_time_str}",
-        f"-TrackModifyDate={date_time_str}",
-        f"-MediaCreateDate={date_time_str}",
-        f"-MediaModifyDate={date_time_str}",
+        f"-DateTimeOriginal={date_time_str}",
         f"-XMP:GPSLatitude={lat}",
         f"-XMP:GPSLongitude={lon}",
-        f"-Keys:GPSCoordinates={lat} {lon}",  # Also set QuickTime keys
-
-        "-overwrite_original",
-        str(mp4_path)
     ]
 
-    # run exiftool program to update exif tags on mp4 files
+    # Add format-specific MD tags
+    if ext == ".mp4":
+        cmd.extend([
+            f"-TrackCreateDate={date_time_str}",
+            f"-TrackModifyDate={date_time_str}",
+            f"-MediaCreateDate={date_time_str}",
+            f"-MediaModifyDate={date_time_str}",
+            f"-Keys:GPSCoordinates={lat} {lon}",
+        ])
+    elif ext == '.jpg':
+        lat_ref = "N" if float(lat) >= 0 else "S"
+        lon_ref = "E" if float(lon) >= 0 else "W"
+        cmd.extend([
+            f"-GPSLatitude={abs(float(lat))}",
+            f"-GPSLatitudeRef={lat_ref}",
+            f"-GPSLongitude={abs(float(lon))}",
+            f"-GPSLongitudeRef={lon_ref}",
+        ])
+
+    cmd.extend(["-overwrite_original", str(file_path)])
+
+    # run exiftool program to update md tags on file
     result = subprocess.run(cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"Exiftool error for {mp4_path}: {result.stderr}")
+        print(f"Exiftool error for {file_path}: {result.stderr}")
 
-    set_file_timestamp(mp4_path, date_time_str[:-4])
-
-
+    set_file_timestamp(file_path, date_time_str[:-4])
 
 # =========================================================================== #
 
@@ -261,11 +214,10 @@ def memory_download(memories):
                         f.write(chunk)
             download_count += 1
 
-            # Handle writing provided metadata to exif tags in files
-            if ext == ".jpg":
-                jpg_exif_write(filepath, line["date"], line["lat"], line["lon"])
-            elif ext == ".mp4":
-                mp4_exif_write(filepath, line["date"], line["lat"], line["lon"])
+            if ext != ".zip":
+                write_exif(filepath, line["date"], line["lat"], line["lon"], ext)
+            else:
+                pass # next feature will be to handle zips
 
     print() # final print to flush buffer and have newline
 
