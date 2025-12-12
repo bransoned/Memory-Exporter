@@ -1,5 +1,2 @@
 beautifulsoup4
 requests
-piexif
-pillow
-pyexiftool
