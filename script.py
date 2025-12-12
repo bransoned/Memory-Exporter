@@ -168,7 +168,6 @@ def extract_zip(filepath, name):
     os.remove(filepath)
 
     for file in os.listdir(f"./memories/{name}"):
-        print("file: ", file)
         zip_file_path = os.path.join(f"./memories/{name}")
 
         if file.endswith("-main.mp4"):
