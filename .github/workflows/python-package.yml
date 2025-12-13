@@ -166,6 +166,16 @@ jobs:
 
             pyinstaller $COMMON_ARGS $BIN_ARGS script.py
 
+      - name: Rename binaries for release
+        shell: bash
+        run: |
+          cd dist
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            mv MemorEasy MemorEasy-macOS
+          elif [[ "$RUNNER_OS" == "Linux" ]]; then
+            mv MemorEasy MemorEasy-Linux
+          fi
+    
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
