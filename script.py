@@ -1,6 +1,8 @@
+from moviepy import VideoFileClip, ImageClip, CompositeVideoClip
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
+from PIL import Image
 import subprocess
 import requests
 import shutil
@@ -8,18 +10,6 @@ import time
 import sys
 import re
 import os
-
-"""
-TODO Need to take data from downloads and begin writing the relevant exif data next...
-if data is a zip, need to unzip and then also write that data into the image(s)
-
-Want to also find a way to unzip the file and then combine the video or jpg with its PNG
-
-At a good start right now, though, with it downloading wayyy faster than the HTML script
-
-Also, need to clean up, compartmentalize, and space out this code into functions/cleaner code
-
-"""
 
 # =========================================================================== #
 
@@ -41,6 +31,28 @@ def find_exiftool():
         return system_path
 
     raise FileNotFoundError(f"Could not find exiftool. Tried bundled and system PATH.")
+
+# =========================================================================== #
+
+# Return name/path of ffmpeg, bundled or system-wide
+def find_ffmpeg():
+
+    exe_name = "ffmpeg.exe" if sys.platform.startswith("win") else "ffmpeg"
+
+    # If bundle
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)
+        bundled = base / "bin" / exe_name
+        if bundled.exists():
+            return str(bundled)
+
+    # Try system PATH
+    system_path = shutil.which(exe_name)
+    if system_path:
+        return system_path
+
+    raise FileNotFoundError(f"Could not find ffmpeg. Tried bundled and system PATH.")
+
 
 # =========================================================================== #
 
@@ -165,6 +177,84 @@ def write_exif(file_path, date_time_str, lat, lon, ext):
 
 # =========================================================================== #
 
+# Overlay PNG layer onto JPG image
+def merge_jpg_with_overlay(jpg_path, png_path):
+
+    # Open images
+    base_jpg = Image.open(jpg_path)
+    overlay = Image.open(png_path)
+
+    # Convert jpg color profile
+    if base_jpg.mode != "RGBA":
+        base_jpg = base_jpg.convert("RGBA")
+
+    # Resize png for easy overlay over jpg
+    if base_jpg.size != overlay.size:
+        overlay = overlay.resize(base_jpg.size, Image.LANCZOS)
+
+    # Combine images and change color profile back
+    combined = Image.alpha_composite(base_jpg, overlay)
+    combined = combined.convert("RGB")
+
+    # Save combined layers to new file
+    combined_path = jpg_path.replace("-main.jpg", "-combined.jpg")
+    combined.save(combined_path, "JPEG", quality=95)
+
+    os.remove(png_path)
+
+    return combined_path
+
+
+# =========================================================================== #
+
+#Overlay PNG layer onto MP4 video
+def merge_mp4_with_overlay(mp4_path, png_path):
+#    print(mp4_path, png_path)
+
+    ffmpeg_path = find_ffmpeg()
+
+    combined_path = mp4_path.replace("-main.mp4", "-combined.mp4")
+
+    # Get mp4 dimensions
+    try:
+        video = VideoFileClip(mp4_path)
+        video_width, video_height = video.size
+        video.close()
+    except Exception as e:
+        print(f"Error reading video dimensions with moviepy: {e}")
+        return
+
+    # Resize png file to mp4 dimensions
+    try:
+        overlay = Image.open(png_path)
+        overlay = overlay.resize((video_width, video_height), Image.LANCZOS)
+        overlay.save(png_path, "PNG")
+    except Exception as e:
+        print(f"Error resizing PNG with Pillow: {e}")
+        return
+
+
+    cmd = [
+        ffmpeg_path,
+        "-i", mp4_path,      # Input video
+        "-i", png_path,      # Input overlay
+        "-filter_complex", "[0:v][1:v]overlay=0:0",  # Overlay at position 0,0
+        "-codec:a", "copy",       # Copy audio without re-encoding
+        "-y",                     # Overwrite output file
+        combined_path
+    ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"FFmpeg error for {mp4_path}: {result.stderr}")
+        return None
+
+    os.remove(png_path)
+
+    return combined_path
+
+# =========================================================================== #
+
 # Extract files from a zip folder and place them into a new folder matching file naming convention
 def handle_zip(filepath, name, line):
 
@@ -175,6 +265,9 @@ def handle_zip(filepath, name, line):
     shutil.unpack_archive(filepath, new_folder)
     os.remove(filepath)
 
+    have_mp4 = False
+    have_jpg = False
+
     # Go through each file in extracted folder, find and tag mp4/jpg files then the folder
     for file in os.listdir(new_folder):
 
@@ -184,11 +277,16 @@ def handle_zip(filepath, name, line):
         if file.endswith("-main.mp4"):
             new_file = f"{name}-main.mp4"
             internal_ext = ".mp4"
+            have_mp4 = True
+
         elif file.endswith("-main.jpg"):
             new_file = f"{name}-main.jpg"
             internal_ext = ".jpg"
+            have_jpg = True
+
         elif file.endswith("-overlay.png"):
             new_file = f"{name}-overlay.png"
+
         else:
             new_file=file
 
@@ -199,11 +297,17 @@ def handle_zip(filepath, name, line):
         if internal_ext != "":
             write_exif(f"{new_folder}/{name}-main{internal_ext}", line["date"], line["lat"], line["lon"], internal_ext)
 
-        # Updates modified time of folder to internal file creation date
-        write_exif(new_folder, line["date"], line["lat"], line["lon"], "")
+    # Handles combining main layers with overlay
+    if have_mp4:
+        combined_path = merge_mp4_with_overlay(f"{new_folder}/{name}-main.mp4", f"{new_folder}/{name}-overlay.png")
+        write_exif(combined_path, line["date"], line["lat"], line["lon"], ".mp4")
 
-    # TODO Combine png layer with jpg file. Save as separate file to preserve blank jpg
-    # Delete png after that
+    if have_jpg:
+        combined_path = merge_jpg_with_overlay(f"{new_folder}/{name}-main.jpg", f"{new_folder}/{name}-overlay.png")
+        write_exif(combined_path, line["date"], line["lat"], line["lon"], ".jpg")
+
+    # Updates modified time of folder to internal file creation date
+    write_exif(new_folder, line["date"], line["lat"], line["lon"], "")
 
 # =========================================================================== #
 
