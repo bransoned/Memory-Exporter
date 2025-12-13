@@ -89,7 +89,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
-        
+
     - name: Build with PyInstaller
       run: |
 #        python -m PyInstaller --onefile --add-binary "bin/exiftool.exe;bin" --add-binary "bin/ffmpeg.exe;bin" --add-data "bin/exiftool_files;bin/exiftool_files" script.py
